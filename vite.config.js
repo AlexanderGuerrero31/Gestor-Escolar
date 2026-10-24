@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: ['resources/css/app.css', 'resources/scss/app.scss', 'resources/js/app.js'],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
@@ -16,6 +16,15 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    css: {
+        preprocessorOptions: {
+            scss: {
+                // Bootstrap 5.3 aún usa @import; ocultamos esos avisos de Sass.
+                quietDeps: true,
+                silenceDeprecations: ['import'],
+            },
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
