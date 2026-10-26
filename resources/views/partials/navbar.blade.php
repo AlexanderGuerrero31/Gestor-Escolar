@@ -8,17 +8,35 @@
 
         <div class="collapse navbar-collapse" id="menuPrincipal">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('grados.*') ? 'active' : '' }}"
-                       href="{{ route('grados.index') }}">Grados</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('alumnos.*', 'tutores.*', 'docentes.*') ? 'active' : '' }}"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Personas</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('alumnos.index') }}">Alumnos</a></li>
+                        <li><a class="dropdown-item" href="{{ route('tutores.index') }}">Tutores</a></li>
+                        <li><a class="dropdown-item" href="{{ route('docentes.index') }}">Docentes</a></li>
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('ciclos.*') ? 'active' : '' }}"
-                       href="{{ route('ciclos.index') }}">Ciclos escolares</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('grados.*', 'ciclos.*', 'aulas.*', 'materias.*') ? 'active' : '' }}"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Catálogos</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('grados.index') }}">Grados</a></li>
+                        <li><a class="dropdown-item" href="{{ route('ciclos.index') }}">Ciclos escolares</a></li>
+                        <li><a class="dropdown-item" href="{{ route('aulas.index') }}">Aulas</a></li>
+                        <li><a class="dropdown-item" href="{{ route('materias.index') }}">Materias</a></li>
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('aulas.*') ? 'active' : '' }}"
-                       href="{{ route('aulas.index') }}">Aulas</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('grupos.*', 'inscripciones.*', 'horarios.*', 'calificaciones.*', 'asistencias.*') ? 'active' : '' }}"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Escolar</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('grupos.index') }}">Grupos</a></li>
+                        <li><a class="dropdown-item" href="{{ route('inscripciones.index') }}">Inscripciones</a></li>
+                        <li><a class="dropdown-item" href="{{ route('horarios.index') }}">Horarios</a></li>
+                        <li><a class="dropdown-item" href="{{ route('calificaciones.index') }}">Calificaciones</a></li>
+                        <li><a class="dropdown-item" href="{{ route('asistencias.index') }}">Asistencias</a></li>
+                    </ul>
                 </li>
             </ul>
         </div>
