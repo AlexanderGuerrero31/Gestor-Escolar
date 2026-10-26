@@ -6,7 +6,7 @@
     @php
         $idsTutores = $alumno?->tutores->pluck('id')->all() ?? [];
         $tutoresSeleccionados = collect(old('tutores', $idsTutores))->map(fn ($id) => (int) $id);
-    @endphp
+    @endphpgit checkout --ours routes/web.php resources/views/partials/navbar.blade.php
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
