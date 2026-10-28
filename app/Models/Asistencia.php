@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['alumno_id', 'fecha', 'estado', 'observaciones'])]
+#[Fillable(['alumno_id', 'materia_id', 'fecha', 'estado', 'observaciones'])]
 class Asistencia extends Model
 {
     protected $table = 'asistencias';
@@ -26,5 +26,10 @@ class Asistencia extends Model
     public function alumno(): BelongsTo
     {
         return $this->belongsTo(Alumno::class, 'alumno_id');
+    }
+
+    public function materia(): BelongsTo
+    {
+        return $this->belongsTo(Materia::class, 'materia_id');
     }
 }

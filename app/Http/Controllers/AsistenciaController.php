@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alumno;
 use App\Models\Asistencia;
+use App\Models\Materia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -52,8 +53,9 @@ class AsistenciaController extends Controller
     private function vista(?Asistencia $asistencia): View
     {
         return view('asistencias.index', [
-            'asistencias' => Asistencia::with('alumno')->orderByDesc('fecha')->orderBy('alumno_id')->get(),
+            'asistencias' => Asistencia::with(['alumno', 'materia'])->orderByDesc('fecha')->orderBy('alumno_id')->get(),
             'alumnos' => Alumno::orderBy('apellido_paterno')->orderBy('nombre')->get(),
+            'materias' => Materia::orderBy('nombre')->get(),
             'estados' => self::ESTADOS,
             'asistencia' => $asistencia,
         ]);
@@ -66,20 +68,23 @@ class AsistenciaController extends Controller
     {
         return $request->validate([
             'alumno_id' => ['required', 'integer', 'exists:alumnos,id'],
+            'materia_id' => ['required', 'integer', 'exists:materias,id'],
             'fecha' => [
                 'required', 'date', 'before_or_equal:today',
                 Rule::unique('asistencias', 'fecha')
                     ->where('alumno_id', $request->input('alumno_id'))
+                    ->where('materia_id', $request->input('materia_id'))
                     ->ignore($asistencia),
             ],
             'estado' => ['required', 'in:'.implode(',', array_keys(self::ESTADOS))],
             'observaciones' => ['nullable', 'string', 'max:255'],
         ], [
             'alumno_id.required' => 'Selecciona un alumno.',
+            'materia_id.required' => 'Selecciona la materia de la asistencia.',
             'fecha.required' => 'La fecha es obligatoria.',
             'fecha.date' => 'La fecha no es válida.',
             'fecha.before_or_equal' => 'No se puede registrar asistencia de una fecha futura.',
-            'fecha.unique' => 'Ese alumno ya tiene asistencia registrada en esa fecha.',
+            'fecha.unique' => 'Ese alumno ya tiene asistencia registrada en esa materia y fecha.',
             'estado.required' => 'Selecciona el estado.',
             'estado.in' => 'El estado seleccionado no es válido.',
             'observaciones.max' => 'Las observaciones no pueden tener más de 255 caracteres.',

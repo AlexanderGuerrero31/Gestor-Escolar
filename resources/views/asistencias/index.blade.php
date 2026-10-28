@@ -24,14 +24,27 @@
                         </select>
                         @error('alumno_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label for="materia_id" class="form-label">Materia</label>
+                        <select id="materia_id" name="materia_id" class="form-select @error('materia_id') is-invalid @enderror">
+                            <option value="">Selecciona...</option>
+                            @foreach ($materias as $m)
+                                <option value="{{ $m->id }}" @selected(old('materia_id', $asistencia?->materia_id) == $m->id)>{{ $m->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('materia_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label for="fecha" class="form-label">Fecha</label>
                         <input type="date" id="fecha" name="fecha" max="{{ now()->format('Y-m-d') }}"
                                class="form-control @error('fecha') is-invalid @enderror"
                                value="{{ old('fecha', $asistencia?->fecha?->format('Y-m-d') ?? now()->format('Y-m-d')) }}">
                         @error('fecha') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-5 mb-3">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
                         <label for="estado" class="form-label">Estado</label>
                         <select id="estado" name="estado" class="form-select @error('estado') is-invalid @enderror">
                             @foreach ($estados as $clave => $etiqueta)
@@ -40,13 +53,12 @@
                         </select>
                         @error('estado') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="observaciones" class="form-label">Observaciones (opcional)</label>
-                    <input type="text" id="observaciones" name="observaciones" class="form-control @error('observaciones') is-invalid @enderror"
-                           value="{{ old('observaciones', $asistencia?->observaciones) }}" placeholder="Ej. Presentó justificante médico">
-                    @error('observaciones') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="col-md-8 mb-3">
+                        <label for="observaciones" class="form-label">Observaciones (opcional)</label>
+                        <input type="text" id="observaciones" name="observaciones" class="form-control @error('observaciones') is-invalid @enderror"
+                               value="{{ old('observaciones', $asistencia?->observaciones) }}" placeholder="Ej. Presentó justificante médico">
+                        @error('observaciones') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Guardar Asistencia</button>
@@ -67,6 +79,7 @@
                         <th>ID</th>
                         <th>Fecha</th>
                         <th>Alumno</th>
+                        <th>Materia</th>
                         <th>Estado</th>
                         <th>Observaciones</th>
                         <th class="text-end">Acciones</th>
@@ -86,6 +99,7 @@
                             <td>{{ $item->id }}</td>
                             <td>{{ $item->fecha->format('d/m/Y') }}</td>
                             <td>{{ $item->alumno->nombre_completo }}</td>
+                            <td>{{ $item->materia?->nombre ?? 'Sin materia' }}</td>
                             <td><span class="badge {{ $colorEstado }}">{{ $estados[$item->estado] ?? $item->estado }}</span></td>
                             <td>{{ $item->observaciones }}</td>
                             <td class="text-end">
@@ -99,7 +113,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-3">No hay asistencias registradas todavía.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-3">No hay asistencias registradas todavía.</td></tr>
                     @endforelse
                 </tbody>
             </table>

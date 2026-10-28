@@ -14,6 +14,7 @@ use App\Models\Horario;
 use App\Models\Inscripcion;
 use App\Models\Materia;
 use App\Models\Tutor;
+use App\Models\Unidad;
 use Illuminate\Database\Seeder;
 
 /**
@@ -42,6 +43,17 @@ class EscuelaSeeder extends Seeder
         ])->mapWithKeys(fn (array $m) => [
             $m[1] => Materia::updateOrCreate(['clave' => $m[0]], ['nombre' => $m[1], 'horas_semana' => $m[2]]),
         ]);
+
+        // Unidades de cada materia (las calificaciones se capturan por unidad).
+        $unidades = [];
+        foreach ($materias as $nombreMateria => $materia) {
+            foreach (['Unidad 1', 'Unidad 2', 'Unidad 3'] as $nombreUnidad) {
+                $unidades[$nombreMateria][$nombreUnidad] = Unidad::firstOrCreate([
+                    'materia_id' => $materia->id,
+                    'nombre' => $nombreUnidad,
+                ]);
+            }
+        }
 
         // Docentes y las materias que imparten (muchos-a-muchos: docente_materia).
         $docentes = collect([
@@ -134,28 +146,40 @@ class EscuelaSeeder extends Seeder
             );
         }
 
-        // Calificaciones: Matemáticas y Español, periodos 1 y 2, valores de 5.0 a 10.0.
+        // Calificaciones: Matemáticas y Español, unidades 1 y 2, valores de 5.0 a 10.0.
         $notas = [
             [9.5, 9.0, 8.5, 9.0], [8.0, 8.5, 7.5, 8.0], [6.5, 7.0, 7.0, 7.5], [9.0, 9.5, 9.0, 10.0],
             [5.0, 5.5, 6.0, 6.5], [7.5, 8.0, 8.0, 8.5], [8.5, 8.0, 9.0, 9.0], [10.0, 9.5, 9.5, 10.0],
         ];
+        $combinaciones = [['Matemáticas', 'Unidad 1'], ['Matemáticas', 'Unidad 2'], ['Español', 'Unidad 1'], ['Español', 'Unidad 2']];
         foreach ($alumnos as $i => $alumno) {
-            $combinaciones = [['Matemáticas', 1], ['Matemáticas', 2], ['Español', 1], ['Español', 2]];
-            foreach ($combinaciones as $j => [$materia, $periodo]) {
+            foreach ($combinaciones as $j => [$materia, $unidad]) {
                 Calificacion::updateOrCreate(
-                    ['alumno_id' => $alumno->id, 'materia_id' => $materias[$materia]->id, 'periodo' => $periodo],
-                    ['calificacion' => $notas[$i][$j]],
+                    ['alumno_id' => $alumno->id, 'unidad_id' => $unidades[$materia][$unidad]->id],
+                    ['materia_id' => $materias[$materia]->id, 'calificacion' => $notas[$i][$j]],
                 );
             }
         }
 
-        // Asistencias de una semana de clases (lunes a viernes).
+        // Asistencias por materia: una por cada clase que el grupo del alumno tiene en la semana
+        // del 19 al 23 de octubre de 2026 (según el horario del grupo).
+        $fechasPorDia = [
+            'Lunes' => '2026-10-19', 'Martes' => '2026-10-20', 'Miércoles' => '2026-10-21',
+            'Jueves' => '2026-10-22', 'Viernes' => '2026-10-23',
+        ];
         $estados = ['presente', 'presente', 'presente', 'retardo', 'presente', 'falta', 'justificada'];
         foreach ($alumnos as $i => $alumno) {
-            foreach (range(0, 4) as $dia) {
-                $estado = $estados[($i * 3 + $dia * 2) % count($estados)];
+            $clase = 0;
+            foreach ($horarios as [$grupo, $materia, , $dia]) {
+                if ($grupo->id !== $asignacion[$i]->id) {
+                    continue;
+                }
+
+                $estado = $estados[($i * 3 + $clase * 2) % count($estados)];
+                $clase++;
+
                 Asistencia::updateOrCreate(
-                    ['alumno_id' => $alumno->id, 'fecha' => date('Y-m-d', strtotime("2026-10-19 +{$dia} days"))],
+                    ['alumno_id' => $alumno->id, 'materia_id' => $materias[$materia]->id, 'fecha' => $fechasPorDia[$dia]],
                     [
                         'estado' => $estado,
                         'observaciones' => $estado === 'justificada' ? 'Presentó justificante médico' : null,

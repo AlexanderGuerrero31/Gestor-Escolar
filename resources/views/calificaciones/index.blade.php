@@ -35,14 +35,9 @@
                         @error('materia_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-2 mb-3">
-                        <label for="periodo" class="form-label">Periodo</label>
-                        <select id="periodo" name="periodo" class="form-select @error('periodo') is-invalid @enderror">
-                            <option value="">Selecciona...</option>
-                            @foreach ($periodos as $p)
-                                <option value="{{ $p }}" @selected(old('periodo', $calificacion?->periodo) == $p)>Periodo {{ $p }}</option>
-                            @endforeach
-                        </select>
-                        @error('periodo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label for="unidad_id" class="form-label">Unidad</label>
+                        <select id="unidad_id" name="unidad_id" class="form-select @error('unidad_id') is-invalid @enderror"></select>
+                        @error('unidad_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-3 mb-3">
                         <label for="calificacion" class="form-label">Calificación (0 a 10)</label>
@@ -51,6 +46,10 @@
                                value="{{ old('calificacion', $calificacion?->calificacion) }}" placeholder="Ej. 8.5">
                         @error('calificacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+                </div>
+
+                <div id="aviso-sin-unidades" class="alert alert-warning d-none">
+                    Esta materia todavía no tiene unidades. Agrégalas desde la pantalla de Materias (botón Editar).
                 </div>
 
                 <button type="submit" class="btn btn-primary">Guardar Calificación</button>
@@ -71,7 +70,7 @@
                         <th>ID</th>
                         <th>Alumno</th>
                         <th>Materia</th>
-                        <th>Periodo</th>
+                        <th>Unidad</th>
                         <th>Calificación</th>
                         <th class="text-end">Acciones</th>
                     </tr>
@@ -82,7 +81,7 @@
                             <td>{{ $item->id }}</td>
                             <td>{{ $item->alumno->nombre_completo }}</td>
                             <td>{{ $item->materia->nombre }}</td>
-                            <td>{{ $item->periodo }}</td>
+                            <td>{{ $item->unidad?->nombre ?? 'Sin unidad' }}</td>
                             <td>
                                 <span class="badge {{ $item->calificacion >= 6 ? 'text-bg-success' : 'text-bg-danger' }}">{{ number_format((float) $item->calificacion, 1) }}</span>
                             </td>
@@ -103,4 +102,37 @@
             </table>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const unidadesPorMateria = @js($unidadesPorMateria);
+            const unidadSeleccionada = @js((string) old('unidad_id', $calificacion?->unidad_id));
+            const selectMateria = document.getElementById('materia_id');
+            const selectUnidad = document.getElementById('unidad_id');
+            const aviso = document.getElementById('aviso-sin-unidades');
+
+            function cargarUnidades(conservarSeleccion) {
+                const unidades = unidadesPorMateria[selectMateria.value] ?? [];
+                selectUnidad.innerHTML = '';
+
+                const primera = document.createElement('option');
+                primera.value = '';
+                primera.textContent = selectMateria.value ? 'Selecciona...' : 'Elige una materia';
+                selectUnidad.appendChild(primera);
+
+                unidades.forEach((unidad) => {
+                    const opcion = document.createElement('option');
+                    opcion.value = unidad.id;
+                    opcion.textContent = unidad.nombre;
+                    opcion.selected = conservarSeleccion && String(unidad.id) === unidadSeleccionada;
+                    selectUnidad.appendChild(opcion);
+                });
+
+                aviso.classList.toggle('d-none', ! selectMateria.value || unidades.length > 0);
+            }
+
+            selectMateria.addEventListener('change', () => cargarUnidades(false));
+            cargarUnidades(true);
+        });
+    </script>
 @endsection

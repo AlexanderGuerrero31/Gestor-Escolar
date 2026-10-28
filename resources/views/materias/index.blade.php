@@ -5,6 +5,12 @@
 @section('contenido')
     @php
         $docentesSeleccionados = collect(old('docentes', $materia?->docentes->pluck('id')->all() ?? []))->map(fn ($id) => (int) $id);
+
+        $filasUnidades = old('unidades', $materia?->unidades->map(fn ($u) => ['id' => $u->id, 'nombre' => $u->nombre])->all() ?? []);
+        if (empty($filasUnidades)) {
+            $filasUnidades = [['id' => '', 'nombre' => '']];
+        }
+        $siguienteIndiceUnidad = collect(array_keys($filasUnidades))->max() + 1;
     @endphp
 
     <div class="card shadow-sm mb-4">
@@ -40,6 +46,25 @@
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label">Unidades de la materia</label>
+                    <div id="lista-unidades">
+                        @foreach ($filasUnidades as $indice => $fila)
+                            <div class="input-group mb-2 fila-unidad">
+                                <input type="hidden" name="unidades[{{ $indice }}][id]" value="{{ $fila['id'] ?? '' }}">
+                                <input type="text" name="unidades[{{ $indice }}][nombre]" class="form-control"
+                                       value="{{ $fila['nombre'] ?? '' }}" placeholder="Ej. Unidad 1, Álgebra...">
+                                <button type="button" class="btn btn-outline-danger quitar-unidad">Quitar</button>
+                            </div>
+                        @endforeach
+                    </div>
+                    <button type="button" id="agregar-unidad" class="btn btn-sm btn-outline-secondary">+ Agregar unidad</button>
+                    @if ($errors->has('unidades') || $errors->has('unidades.*'))
+                        <div class="text-danger small mt-1">{{ $errors->first('unidades') ?: $errors->first('unidades.*') }}</div>
+                    @endif
+                    <div class="form-text">Las calificaciones de esta materia se capturan por unidad. Las filas vacías se ignoran.</div>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label">Docentes que imparten esta materia</label>
                     @forelse ($docentes as $docenteItem)
                         <div class="form-check">
@@ -71,6 +96,7 @@
                         <th>Clave</th>
                         <th>Materia</th>
                         <th>Horas/sem</th>
+                        <th>Unidades</th>
                         <th>Docentes</th>
                         <th class="text-end">Acciones</th>
                     </tr>
@@ -82,6 +108,13 @@
                             <td>{{ $item->clave }}</td>
                             <td>{{ $item->nombre }}</td>
                             <td>{{ $item->horas_semana }}</td>
+                            <td>
+                                @forelse ($item->unidades as $u)
+                                    <span class="badge text-bg-secondary">{{ $u->nombre }}</span>
+                                @empty
+                                    <span class="text-muted">Sin unidades</span>
+                                @endforelse
+                            </td>
                             <td>
                                 @forelse ($item->docentes as $d)
                                     <span class="badge text-bg-info">{{ $d->nombre_completo }}</span>
@@ -100,10 +133,42 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-3">No hay materias registradas todavía.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-3">No hay materias registradas todavía.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lista = document.getElementById('lista-unidades');
+            let siguiente = {{ $siguienteIndiceUnidad }};
+
+            document.getElementById('agregar-unidad').addEventListener('click', () => {
+                const fila = document.createElement('div');
+                fila.className = 'input-group mb-2 fila-unidad';
+                fila.innerHTML = `
+                    <input type="hidden" name="unidades[${siguiente}][id]" value="">
+                    <input type="text" name="unidades[${siguiente}][nombre]" class="form-control" placeholder="Ej. Unidad ${lista.children.length + 1}">
+                    <button type="button" class="btn btn-outline-danger quitar-unidad">Quitar</button>`;
+                lista.appendChild(fila);
+                fila.querySelector('input[type=text]').focus();
+                siguiente++;
+            });
+
+            lista.addEventListener('click', (evento) => {
+                const boton = evento.target.closest('.quitar-unidad');
+                if (! boton) {
+                    return;
+                }
+                const fila = boton.closest('.fila-unidad');
+                if (lista.children.length > 1) {
+                    fila.remove();
+                } else {
+                    fila.querySelector('input[type=text]').value = '';
+                }
+            });
+        });
+    </script>
 @endsection
